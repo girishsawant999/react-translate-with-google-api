@@ -1,3 +1,24 @@
-h1 {
-  font-size: 1.5em;
+span[data-loading='true'] {
+  min-width: 20px;
+  min-height: 20px;
+  display: inherit;
+  position: relative;
+}
+span[data-loading='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(to right, #c6c6c620 50%, #c6c6c630 20%, #c6c6c640 5%);
+  animation: width 0.7s infinite;
+  transform: skewX(10deg);
+}
+@keyframes width {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
 }

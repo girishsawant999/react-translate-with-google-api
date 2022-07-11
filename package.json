@@ -1,6 +1,6 @@
 {
   "name": "@girishsawant999/react-translate-with-google-api",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Translate with free google translate API",
   "type": "module",
   "source": "src/index.tsx",
@@ -30,11 +30,13 @@
     "url": "git+https://github.com/girishsawant999/react-translate-with-google-api.git"
   },
   "keywords": [
+    "translate-hook",
+    "translate",
+    "google",
+    "api",
     "react",
     "package",
-    "typescript",
-    "module",
-    "library"
+    "typescript"
   ],
   "author": "Girish Sawant",
   "license": "MIT",

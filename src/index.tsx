@@ -1,5 +1,5 @@
-import React from 'react';
-import { setConfig, useTranslate } from 'react-google-translate';
+import React, { useEffect, useState, useRef } from 'react';
+import { setConfig, useLazyTranslate } from 'react-google-translate';
 import './style.scss';
 
 export const setupConfig = ({
@@ -26,44 +26,76 @@ export const setupConfig = ({
     });
 };
 
-export const translate = async (
-  text: string,
+interface TReturnuseTranslate {
+  translatedData: {
+    [key: string]: string;
+  };
+  loading: boolean;
+}
+
+export const useTranslate = (
   language = 'en-US',
-  skip = false
-): Promise<null | string | string[]> => {
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  const { data, loading } = await useTranslate(text, { language, skip });
-  if (loading) {
-    return null;
+  initialData: {
+    [key: string]: string;
   }
-  return data;
+): TReturnuseTranslate => {
+  const [translatedData, setTranslatedData] = useState(initialData);
+
+  const [translate, { data, loading }] = useLazyTranslate({ language });
+
+  const currentKey = useRef<string>('');
+  useEffect(() => {
+    void (async (): Promise<void> => {
+      for (const [key, value] of Object.entries(initialData)) {
+        currentKey.current = key;
+        await translate(value);
+      }
+    })();
+  }, [language]);
+
+  useEffect(() => {
+    if (data && typeof data === 'string') {
+      setTranslatedData({
+        ...translatedData,
+        [currentKey.current]: data
+      });
+    }
+  }, [data]);
+
+  return {
+    translatedData,
+    loading
+  };
 };
 
-interface TranslateProps {
+interface TranslateProps
+  extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
   children: string;
   language?: string;
   skip?: boolean;
-  className?: string;
 }
 
-const Translate: React.FC<TranslateProps> = ({
-  children,
-  language = 'en-US',
-  skip = false,
-  className = ''
-}: TranslateProps) => {
+const Translate: React.FC<TranslateProps> = (props: TranslateProps) => {
+  const { language = 'en', skip = false, children, ...otherProps } = props;
+
+  const [translate, { data, loading }] = useLazyTranslate({ language });
+
+  useEffect(() => {
+    if (children && !skip) {
+      void translate(children);
+    }
+  }, [translate, children]);
+
   if (skip) {
     return (
-      <span data-loading="false" className={className}>
+      <span data-loading="false" {...otherProps}>
         {children}
       </span>
     );
   }
 
-  const { data, loading } = useTranslate(children, { language, skip });
-
   return (
-    <span data-loading={loading} className={className}>
+    <span data-loading={loading} {...otherProps}>
       {data || children}
     </span>
   );

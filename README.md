@@ -18,9 +18,8 @@
 
 ---
 
-<p align="center"> A react package created to translate the text using Google Translate API.
-    <br> 
-</p>
+<p align="center"> A simple react package develope to translate text using Google Translate API. You can use component or the simple hook.</p>
+<br>
 
 ## 📝 Table of Contents
 
@@ -66,10 +65,42 @@ Now use Translate component
 ```jsx
 import Translate from '@girishsawant999/react-translate-with-google-api';
 
-<Translate language="fr-FR">Hello World</Translate>;
+<Translate language="fr-FR" className="font-bold" style={{ color: 'red' }}>
+  Hello World
+</Translate>;
 ```
 
 You will see output as "Bonjour le monde".
+
+or You can use the useTranslate hook to translate the string.
+
+```jsx
+import { useTranslate } from '@girishsawant999/react-translate-with-google-api';
+
+const language = 'fr-FR';
+
+const { translatedData, loading } = useTranslate(language, {
+  emailAddress: 'email address',
+  firstName: 'first name',
+  lastName: 'last name'
+});
+
+return (
+  <div>
+    {loading ? <div>Loading...</div> : null}
+    <div>
+      <label>
+        <Translate language="fr-FR" className="font-bold" style={{ color: 'red' }}>
+          Email Address
+        </Translate>
+        <input type="text" placeholder={translatedData.emailAddress} />
+      </label>
+    </div>
+  </div>
+);
+```
+
+You will get the translated data and loading status.
 
 ## ⛏️ Built Using <a name = "built_using"></a>
 

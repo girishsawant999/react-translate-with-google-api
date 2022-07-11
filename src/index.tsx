@@ -26,7 +26,7 @@ export const setupConfig = ({
     });
 };
 
-interface TReturnuseTranslate {
+interface TReturnUseTranslate {
   translatedData: {
     [key: string]: string;
   };
@@ -38,7 +38,7 @@ export const useTranslate = (
   initialData: {
     [key: string]: string;
   }
-): TReturnuseTranslate => {
+): TReturnUseTranslate => {
   const [translatedData, setTranslatedData] = useState(initialData);
 
   const [translate, { data, loading }] = useLazyTranslate({ language });
@@ -76,7 +76,7 @@ interface TranslateProps
 }
 
 const Translate: React.FC<TranslateProps> = (props: TranslateProps) => {
-  const { language = 'en', skip = false, children, ...otherProps } = props;
+  const { language = 'en-US', skip = false, children, ...otherProps } = props;
 
   const [translate, { data, loading }] = useLazyTranslate({ language });
 

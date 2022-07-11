@@ -48,13 +48,15 @@ Let's start with the following steps.
 
 ## Usage <a name = "usage"></a>
 
-Add following code in **index.js** file.
+Generate your credentials and project id in Google Cloud Platform. Read through the [documentation](https://cloud.google.com/iam/docs/creating-managing-service-accounts) for setting a service account.
+
+After you acquired your credentials and project id, add it to your environment variables and add following code in **index.js** file.
 
 ```jsx
 import { setupConfig } from '@girishsawant999/react-translate-with-google-api';
 
 setupConfig({
-  clientEmail: process.env.REACT_APP_GCP_CLIENT_EMAIL,
+  clientEmail: process.env.REACT_APP_GCP_CLIENT_SERVICE_ACC_EMAIL,
   privateKey: process.env.REACT_APP_GCP_PRIVATE_KEY,
   projectId: process.env.REACT_APP_GCP_PROJECT_ID
 });
@@ -65,19 +67,19 @@ Now use Translate component
 ```jsx
 import Translate from '@girishsawant999/react-translate-with-google-api';
 
-<Translate language="fr-FR" className="font-bold" style={{ color: 'red' }}>
+<Translate language="fr" className="font-bold" style={{ color: 'red' }}>
   Hello World
 </Translate>;
 ```
 
 You will see output as "Bonjour le monde".
 
-or You can use the useTranslate hook to translate the string.
+or You can use the useTranslate hook to translate the string. Check out language codes [here](https://cloud.google.com/translate/docs/languages).
 
 ```jsx
 import { useTranslate } from '@girishsawant999/react-translate-with-google-api';
 
-const language = 'fr-FR';
+const language = 'fr';
 
 const { translatedData, loading } = useTranslate(language, {
   emailAddress: 'email address',
@@ -90,7 +92,7 @@ return (
     {loading ? <div>Loading...</div> : null}
     <div>
       <label>
-        <Translate language="fr-FR" className="font-bold" style={{ color: 'red' }}>
+        <Translate language="fr" className="font-bold" style={{ color: 'red' }}>
           Email Address
         </Translate>
         <input type="text" placeholder={translatedData.emailAddress} />

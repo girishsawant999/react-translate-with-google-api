@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, Dispatch } from 'react';
 import { setConfig, useLazyTranslate } from 'react-google-translate';
 import './style.scss';
 
@@ -26,6 +26,28 @@ export const setupConfig = ({
     });
 };
 
+const useLocalStorage = (key: string, initialValue: unknown): [unknown, Dispatch<unknown>] => {
+  const [value, setValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return (item ? JSON.parse(item) : initialValue) as unknown;
+    } catch (error) {
+      return initialValue;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.log(error);
+    }
+  }, [value]);
+
+  return [value, setValue];
+};
+
 interface TReturnUseTranslate {
   translatedData: {
     [key: string]: string;
@@ -37,24 +59,56 @@ export const useTranslate = (
   language = 'en-US',
   initialData: {
     [key: string]: string;
+  },
+  options: {
+    skip?: boolean;
+    useStorage?: boolean;
   }
 ): TReturnUseTranslate => {
-  const [translatedData, setTranslatedData] = useState(initialData);
+  const [storedTranslatedData, setStoredTranslatedData] = useLocalStorage('react-translate', {});
+  const { skip, useStorage } = { skip: false, useStorage: true, ...options };
 
-  const [translate, { data, loading }] = useLazyTranslate({ language });
+  const [translatedData, setTranslatedData] = useState(initialData);
+  const [loading, setLoading] = useState(false);
+
+  const [translate, { data }] = useLazyTranslate({ language, skip });
 
   const currentKey = useRef<string>('');
+  const currentValue = useRef<string>('');
   useEffect(() => {
+    if (skip) return;
     void (async (): Promise<void> => {
+      setLoading(true);
       for (const [key, value] of Object.entries(initialData)) {
+        if (useStorage) {
+          const existedValue = (storedTranslatedData as { [key: string]: string })[
+            `${language}-${value}`
+          ];
+          if (existedValue) {
+            setTranslatedData({
+              ...translatedData,
+              [key]: existedValue
+            });
+            continue;
+          }
+        }
         currentKey.current = key;
+        currentValue.current = value;
         await translate(value);
       }
+      setLoading(false);
     })();
   }, [language]);
 
   useEffect(() => {
+    if (skip) return;
     if (data && typeof data === 'string') {
+      if (useStorage) {
+        setStoredTranslatedData({
+          ...(storedTranslatedData as { [key: string]: string }),
+          [`${language}-${currentValue.current}`]: data
+        });
+      }
       setTranslatedData({
         ...translatedData,
         [currentKey.current]: data
@@ -73,30 +127,22 @@ interface TranslateProps
   children: string;
   language?: string;
   skip?: boolean;
+  useStorage?: boolean;
 }
 
 const Translate: React.FC<TranslateProps> = (props: TranslateProps) => {
-  const { language = 'en-US', skip = false, children, ...otherProps } = props;
-
-  const [translate, { data, loading }] = useLazyTranslate({ language });
-
-  useEffect(() => {
-    if (children && !skip) {
-      void translate(children);
-    }
-  }, [translate, children]);
-
-  if (skip) {
-    return (
-      <span data-loading="false" {...otherProps}>
-        {children}
-      </span>
-    );
-  }
+  const { language = 'en-US', skip = false, useStorage = true, children, ...otherProps } = props;
+  const { translatedData, loading } = useTranslate(
+    language,
+    {
+      [children]: children
+    },
+    { skip, useStorage }
+  );
 
   return (
     <span data-loading={loading} {...otherProps}>
-      {data || children}
+      {translatedData[children]}
     </span>
   );
 };

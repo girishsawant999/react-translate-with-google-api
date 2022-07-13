@@ -74,18 +74,32 @@ import Translate from '@girishsawant999/react-translate-with-google-api';
 
 You will see output as "Bonjour le monde".
 
-or You can use the useTranslate hook to translate the string. Check out language codes [here](https://cloud.google.com/translate/docs/languages).
+| Props                 | Description                                                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| language              | Type: **String** <br>Language code [check here](https://cloud.google.com/translate/docs/languages) eg. `fr \| mr \| hi \| en-US` |
+| skip (optional)       | Type: **Boolean** <br>Skip translation API call.                                                                                 |
+| useStorage (optional) | Type: **Boolean** <br>Use local storage to store translation.                                                                    |
+
+Also You can use the useTranslate hook to translate the string.
 
 ```jsx
 import { useTranslate } from '@girishsawant999/react-translate-with-google-api';
 
 const language = 'fr';
+const options = {
+  skip: false, // skip translation API call
+  useStorage: true // use local storage to store the translation
+};
 
-const { translatedData, loading } = useTranslate(language, {
-  emailAddress: 'email address',
-  firstName: 'first name',
-  lastName: 'last name'
-});
+const { translatedData, loading } = useTranslate(
+  language,
+  {
+    emailAddress: 'email address',
+    firstName: 'first name',
+    lastName: 'last name'
+  },
+  options
+);
 
 return (
   <div>

@@ -116,7 +116,7 @@ return (
 );
 ```
 
-You will get the translated data and loading status.
+You will get the translated data and loading status. Also you can use `getLanguages` function to get available languages.
 
 ## ⛏️ Built Using <a name = "built_using"></a>
 

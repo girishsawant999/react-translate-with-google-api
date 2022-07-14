@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, Dispatch } from 'react';
-import { setConfig, useLazyTranslate } from 'react-google-translate';
+import { setConfig, useLazyTranslate, getLanguages as _getLanguages } from 'react-google-translate';
 import './style.scss';
 
 export const setupConfig = ({
@@ -147,4 +147,5 @@ const Translate: React.FC<TranslateProps> = (props: TranslateProps) => {
   );
 };
 
+export const getLanguages = _getLanguages;
 export default Translate;

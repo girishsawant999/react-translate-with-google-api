@@ -63,7 +63,7 @@ export const useTranslate = (
   options: {
     skip?: boolean;
     useStorage?: boolean;
-  }
+  } = {}
 ): TReturnUseTranslate => {
   const [storedTranslatedData, setStoredTranslatedData] = useLocalStorage('react-translate', {});
   const { skip, useStorage } = { skip: false, useStorage: true, ...options };

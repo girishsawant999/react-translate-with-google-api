@@ -1,6 +1,6 @@
 {
   "name": "@girishsawant999/react-translate-with-google-api",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Translate with free google translate API",
   "type": "module",
   "source": "src/index.tsx",

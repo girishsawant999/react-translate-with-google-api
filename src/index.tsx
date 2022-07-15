@@ -1,7 +1,12 @@
-import React, { useEffect, useState, useRef, Dispatch } from 'react';
-import { setConfig, useLazyTranslate, getLanguages as _getLanguages } from 'react-google-translate';
+import React, { useEffect, useState, Dispatch } from 'react';
 import './style.scss';
+import { Translate as TranslateV2 } from '@google-cloud/translate/build/src/v2';
+import {
+  Translate as ITranslate,
+  LanguageResult
+} from '@google-cloud/translate/build/src/v2/index.d';
 
+let translate: undefined | ITranslate;
 export const setupConfig = ({
   clientEmail,
   privateKey,
@@ -11,19 +16,18 @@ export const setupConfig = ({
   privateKey: string;
   projectId: string;
 }): void => {
-  setConfig({
-    clientEmail,
-    privateKey,
-    projectId
-  })
-    .then(() => {
-      // eslint-disable-next-line no-console
-      console.log('Config set react with google translate');
-    })
-    .catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error('Error in setting config react with google translate', err);
+  try {
+    translate = new TranslateV2({
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey
+      },
+      projectId
     });
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error while setting up Google Translate API:', error);
+  }
 };
 
 const useLocalStorage = (key: string, initialValue: unknown): [unknown, Dispatch<unknown>] => {
@@ -66,55 +70,51 @@ export const useTranslate = (
   } = {}
 ): TReturnUseTranslate => {
   const [storedTranslatedData, setStoredTranslatedData] = useLocalStorage('react-translate', {});
-  const { skip, useStorage } = { skip: false, useStorage: true, ...options };
+  const { useStorage } = { useStorage: true, ...options };
+  const { skip } = { skip: false, ...options };
 
   const [translatedData, setTranslatedData] = useState(initialData);
   const [loading, setLoading] = useState(false);
 
-  const [translate, { data }] = useLazyTranslate({ language, skip });
-
-  const currentKey = useRef<string>('');
-  const currentValue = useRef<string>('');
   useEffect(() => {
     if (skip) return;
+    if (!translate) {
+      throw new Error('Google Translate API is not setup yet');
+    }
     void (async (): Promise<void> => {
       setLoading(true);
       for (const [key, value] of Object.entries(initialData)) {
         if (useStorage) {
           const existedValue = (storedTranslatedData as { [key: string]: string })[
-            `${language}-${value}`
+            `${language}-${key}`
           ];
           if (existedValue) {
-            setTranslatedData({
-              ...translatedData,
+            setTranslatedData((prevState) => ({
+              ...prevState,
               [key]: existedValue
-            });
+            }));
             continue;
           }
         }
-        currentKey.current = key;
-        currentValue.current = value;
-        await translate(value);
+        try {
+          const result = await translate.translate(value, language);
+          const translatedText = result[0];
+          setTranslatedData((prevState) => ({
+            ...prevState,
+            [key]: translatedText
+          }));
+          setStoredTranslatedData((prevState: { [key: string]: string }) => ({
+            ...prevState,
+            [`${language}-${key}`]: translatedText
+          }));
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error(`Error while translating: ${value} & language ${language}`, error);
+        }
       }
       setLoading(false);
     })();
   }, [language]);
-
-  useEffect(() => {
-    if (skip) return;
-    if (data && typeof data === 'string') {
-      if (useStorage) {
-        setStoredTranslatedData({
-          ...(storedTranslatedData as { [key: string]: string }),
-          [`${language}-${currentValue.current}`]: data
-        });
-      }
-      setTranslatedData({
-        ...translatedData,
-        [currentKey.current]: data
-      });
-    }
-  }, [data]);
 
   return {
     translatedData,
@@ -147,5 +147,12 @@ const Translate: React.FC<TranslateProps> = (props: TranslateProps) => {
   );
 };
 
-export const getLanguages = _getLanguages;
+export const getLanguages = async (): Promise<LanguageResult[]> => {
+  if (!translate) {
+    throw new Error('Google Translate API is not setup yet');
+  }
+  const result = await translate.getLanguages();
+  return result[0];
+};
+
 export default Translate;

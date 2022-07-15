@@ -1,6 +1,6 @@
 {
   "name": "@girishsawant999/react-translate-with-google-api",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Translate with free google translate API",
   "type": "module",
   "source": "src/index.tsx",
@@ -105,7 +105,6 @@
     "not ie < 10"
   ],
   "dependencies": {
-    "@google-cloud/translate": "^7.0.0",
-    "react-google-translate": "^1.0.11"
+    "@google-cloud/translate": "^7.0.0"
   }
 }

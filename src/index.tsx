@@ -1,10 +1,10 @@
-import React, { useEffect, useState, Dispatch } from 'react';
-import './style.scss';
 import { Translate as TranslateV2 } from '@google-cloud/translate/build/src/v2';
 import {
-  Translate as ITranslate,
-  LanguageResult
+  LanguageResult,
+  Translate as ITranslate
 } from '@google-cloud/translate/build/src/v2/index.d';
+import React, { useEffect, useState } from 'react';
+import './style.scss';
 
 let translate: undefined | ITranslate;
 export const setupConfig = ({
@@ -30,34 +30,40 @@ export const setupConfig = ({
   }
 };
 
-const useLocalStorage = (key: string, initialValue: unknown): [unknown, Dispatch<unknown>] => {
-  const [value, setValue] = useState(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return (item ? JSON.parse(item) : initialValue) as unknown;
-    } catch (error) {
-      return initialValue;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      // eslint-disable-next-line no-console
-      console.log(error);
-    }
-  }, [value]);
-
-  return [value, setValue];
-};
-
 interface TReturnUseTranslate {
   translatedData: {
     [key: string]: string;
   };
   loading: boolean;
 }
+
+const STORAGE_KEY = 'react-translate-with-google-api';
+
+const getStoredValue = (key: string = STORAGE_KEY): { [key: string]: string } => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+  try {
+    const item: string | null = window.localStorage.getItem(key);
+    return item ? (JSON.parse(item) as { [key: string]: string }) : {};
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log('Get stored translation error', error);
+    return {};
+  }
+};
+
+const storeValue = (value: { [key: string]: string }, key: string = STORAGE_KEY): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.log('Store translation error', error);
+  }
+};
 
 export const useTranslate = (
   language = 'en-US',
@@ -69,7 +75,6 @@ export const useTranslate = (
     useStorage?: boolean;
   } = {}
 ): TReturnUseTranslate => {
-  const [storedTranslatedData, setStoredTranslatedData] = useLocalStorage('react-translate', {});
   const { useStorage } = { useStorage: true, ...options };
   const { skip } = { skip: false, ...options };
 
@@ -85,9 +90,8 @@ export const useTranslate = (
       setLoading(true);
       for (const [key, value] of Object.entries(initialData)) {
         if (useStorage) {
-          const existedValue = (storedTranslatedData as { [key: string]: string })[
-            `${language}-${key}`
-          ];
+          const storedValue = getStoredValue(STORAGE_KEY);
+          const existedValue = storedValue[`${language}-${key}`];
           if (existedValue) {
             setTranslatedData((prevState) => ({
               ...prevState,
@@ -103,10 +107,16 @@ export const useTranslate = (
             ...prevState,
             [key]: translatedText
           }));
-          setStoredTranslatedData((prevState: { [key: string]: string }) => ({
-            ...prevState,
-            [`${language}-${key}`]: translatedText
-          }));
+          if (useStorage) {
+            const storedValue = getStoredValue(STORAGE_KEY);
+            storeValue(
+              {
+                ...storedValue,
+                [`${language}-${key}`]: translatedText
+              },
+              STORAGE_KEY
+            );
+          }
         } catch (error) {
           // eslint-disable-next-line no-console
           console.error(`Error while translating: ${value} & language ${language}`, error);
